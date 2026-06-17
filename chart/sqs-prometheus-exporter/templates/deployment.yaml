@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.app.name }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "sqs-prometheus-exporter.namespace" . }}
   labels:
     {{- include "sqs-prometheus-exporter.labels" . | nindent 4 }}
 spec:
@@ -43,9 +43,8 @@ spec:
               value: {{ .Values.sqs.monitorIntervalSeconds | quote }}
             - name: AWS_REGION
               value: {{ .Values.sqs.region | quote }}
-{{- range $key, $value := .Values.deployment.extraEnv }}
-            - name: "{{ $key }}"
-              value: "{{ $value }}"
+{{- with .Values.deployment.extraEnv }}
+{{ toYaml . | indent 12 }}
 {{- end }}
           livenessProbe:
             httpGet:
@@ -54,6 +53,10 @@ spec:
             initialDelaySeconds: 3
             timeoutSeconds: 5
             periodSeconds: 30
+          volumeMounts:
+{{- with .Values.deployment.extraVolumeMounts }}
+{{ toYaml . | indent 12 }}
+{{- end }}
       restartPolicy: Always
       nodeSelector:
 {{- with .Values.deployment.nodeSelector }}
@@ -65,5 +68,9 @@ spec:
 {{- end }}
       tolerations:
 {{- with .Values.deployment.tolerations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+      volumes:
+{{- with .Values.deployment.volumes }}
 {{ toYaml . | indent 8 }}
 {{- end }}

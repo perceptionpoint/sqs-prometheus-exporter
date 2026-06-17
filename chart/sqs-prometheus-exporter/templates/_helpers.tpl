@@ -57,3 +57,10 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
+
+{{/*
+Allow the release namespace to be overridden for multi-namespace deployments in combined charts
+*/}}
+{{- define "sqs-prometheus-exporter.namespace" -}}
+{{- default .Release.Namespace .Values.namespaceOverride -}}
+{{- end -}}
